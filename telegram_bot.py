@@ -1,7 +1,7 @@
 
 import os, requests
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-CHAT_ID = os.getenv("CHAT_ID")
+BOT_TOKEN = os.getenv("8021948001:AAFtM1XlwyYS3Xx33GJaZLM8g56zvI4murc")
+CHAT_ID = os.getenv("415392967")
 def send_message(text: str):
     if not (BOT_TOKEN and CHAT_ID):
         print("[Telegram] Missing BOT_TOKEN/CHAT_ID, printing message instead:\n", text)
