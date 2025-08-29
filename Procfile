@@ -1,1 +1,1 @@
-web: python signal_bot_render.py
+worker: python signal_bot_render.py
