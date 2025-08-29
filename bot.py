@@ -1,22 +1,21 @@
 import os
 import time
-import threading
 import requests
 from bs4 import BeautifulSoup
 from telegram import Bot
-from flask import Flask
 
 # گرفتن توکن و چت آی‌دی از Environment Variable
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
 bot = Bot(token=TELEGRAM_TOKEN)
-app = Flask(__name__)
 
 URL = "https://www.investing.com/forex-signals"
 
 def get_signals():
-    headers = {"User-Agent": "Mozilla/5.0"}
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
     r = requests.get(URL, headers=headers)
     soup = BeautifulSoup(r.text, "html.parser")
 
@@ -35,7 +34,7 @@ def get_signals():
 
     return signals
 
-def send_signals():
+def main():
     sent = set()
     while True:
         try:
@@ -49,11 +48,5 @@ def send_signals():
             bot.send_message(chat_id=CHAT_ID, text=f"⚠️ Error: {e}")
             time.sleep(60)
 
-@app.route("/")
-def home():
-    return "📡 Forex Signal Bot is running on Render 🚀"
-
 if __name__ == "__main__":
-    t = threading.Thread(target=send_signals)
-    t.start()
-    app.run(host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
+    main()
