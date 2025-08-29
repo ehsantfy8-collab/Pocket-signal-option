@@ -1,1 +1,1 @@
-worker: python signal_bot_render.py
+web: gunicorn bot_with_flask:app
