@@ -1,25 +1,52 @@
-import telebot
-from flask import Flask, request
 import os
+import time
+import requests
+from bs4 import BeautifulSoup
+from telegram import Bot
 
-TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
-bot = telebot.TeleBot(TOKEN)
-app = Flask(__name__)
+# گرفتن توکن و چت آی‌دی از Environment Variable
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
 
-@app.route('/')
-def home():
-    return "Bot is running on Render ✅"
+bot = Bot(token=TELEGRAM_TOKEN)
 
-@app.route('/' + TOKEN, methods=['POST'])
-def getMessage():
-    json_str = request.stream.read().decode("UTF-8")
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
-    return "!", 200
+URL = "https://www.investing.com/forex-signals"
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.reply_to(message, "سلام 👋 ربات روی Render بالا اومده ✅")
+def get_signals():
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+    r = requests.get(URL, headers=headers)
+    soup = BeautifulSoup(r.text, "html.parser")
+
+    signals = []
+    rows = soup.select("table tr")
+
+    for row in rows[1:6]:  # فقط 5 سیگنال اول
+        cols = row.find_all("td")
+        if len(cols) >= 5:
+            pair = cols[0].get_text(strip=True)
+            action = cols[1].get_text(strip=True)
+            timeframe = cols[2].get_text(strip=True)
+            strength = cols[3].get_text(strip=True)
+
+            signals.append(f"📊 {pair} | {timeframe}\n📈 {action} ({strength})")
+
+    return signals
+
+def main():
+    sent = set()
+    while True:
+        try:
+            signals = get_signals()
+            for s in signals:
+                if s not in sent:
+                    bot.send_message(chat_id=CHAT_ID, text=s)
+                    sent.add(s)
+            time.sleep(300)  # هر 5 دقیقه
+        except Exception as e:
+            bot.send_message(chat_id=CHAT_ID, text=f"⚠️ Error: {e}")
+            time.sleep(60)
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    main()
